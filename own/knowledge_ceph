@@ -1,0 +1,24 @@
+ceph storage = ceph unify
+
+RADOS = object storage
+
+LIBRADOS 
+
+OSD = Linux 
+
+ext maximum 200GB
+xfs maximum 500GB
+
+MON node : Monitor Node
+
+cluster map = compute and distribute data
+
+page 15
+vdb : save journel
+vdc,vdd : osd
+
+sudo rpm -ivh http://download.ceph.com/rpm-jewel/el7/noarch/ceph-release-1-1.el7.noarch.rpm
+
+page 22 : do all osd : osd1 osd2 osd3
+
+

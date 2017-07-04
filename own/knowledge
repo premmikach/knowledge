@@ -1,0 +1,440 @@
+####### BASIC LINUX #######
+## show kernel
+$ uname -a
+
+## Show the name of the current working directory 
+$ pwd
+
+## use root
+$ sudo su 
+
+## exit root
+$ exit
+
+# permission
+# Type USER GROUP OTHERS
+# d    rwx  rwx   r-x
+# EXP. [d][rwx][rwx][r-x] 
+# r - read
+# w - write
+# x - execute
+
+# change directory
+$ cd
+
+# change directory home
+$ cd ~
+
+# change directory root
+$ cd /
+
+# change to last directory 
+$ cd -
+
+# List file
+$ ls -l
+$ ls -la
+
+# Delete directory
+$ rm -rf NAME_DIRECTORY
+
+# Copy file 
+$ cp file1 file2
+
+# Copy directory
+$ cp -avr dir1 dir2
+
+# move file
+$ mv file1 file2
+
+# count line
+# | wc -l
+$ openstack-service list | wc -l
+
+# show less
+$ systemctl list-unit-files | grep openstack | less
+
+# show DISK
+$ blkid
+
+# list blocks
+$ lsblk
+
+# send file 
+$ scp FILE IP_ADDR:PATH
+
+# extracf file
+$ tar -xvf FILE
+
+# view lastest file
+$ cd /var/tmp/DIRECTORY
+$ ls -s
+
+# USER
+[admin@localhost ~]$ id
+uid=1000(admin) gid=1000(admin) groups=1000(admin),10(wheel),974(docker),985(libvirt),5000(dw) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+#wheel - user root assign as admin
+#libvirt - user can create vm
+
+# Display RAM details in Linux machine
+$ free -m
+$ free -mH
+
+# Display disk
+[root@controller ~]# df -H
+Filesystem                       Size  Used Avail Use% Mounted on
+/dev/mapper/VolGroup00-LogVol00   40G  6.8G   31G  18% /
+devtmpfs                         6.3G     0  6.3G   0% /dev
+tmpfs                            6.3G  4.1k  6.3G   1% /dev/shm
+tmpfs                            6.3G   18M  6.2G   1% /run
+tmpfs                            6.3G     0  6.3G   0% /sys/fs/cgroup
+/dev/loop0                       2.0G  6.3M  1.9G   1% /srv/node/swiftloopback
+/dev/vda2                        500M  211M  259M  45% /boot
+tmpfs                            1.3G     0  1.3G   0% /run/user/1000
+
+# Delete Line
+# vi FILE
+# mouse cursur on line to delete
+# press dd
+#
+# Paste 
+# mouse cursur on line to paste
+# p
+
+# VAGRANT
+$ vagrant up
+$ vagrant status
+$ vagrant ssh NAME
+$ vagrant halt # shut off
+$ vagrant -h
+$ vagrant destroy # delete
+
+# Lastest Vagrant packstack files
+$ cd /var/tmp/packstack
+$ ls -la
+###########################
+
+# 1 set name
+## hostname ##
+hostnhamectl set-hostname NAME
+
+# 2 
+## ip address ##
+ip addr
+ip a
+ip a show NAME_INTERFACE
+ip r #ip route
+
+#eth0 : gateway internet NAT, u can ping 
+#host hold x.x.x.1
+#EXP
+#11: virbr6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+#    link/ether fe:54:00:57:93:1b brd ff:ff:ff:ff:ff:ff
+#    inet 10.20.30.1/24 brd 10.20.30.255 scope global virbr6
+#       valid_lft forever preferred_lft forever
+
+# 3 
+#DNS : Name to IP (domain name server)
+#/etc/hosts = local DNS
+#IP          NAME                NAME RD.
+#10.20.30.40 client.example.com  client
+#10.20.30.41 server.example.com  server
+
+# 4 create rsa key : GENERATE KEY @ ROOT
+[root@server]# ssh-keygen -t rsa 
+[root@server]# ssh-copy-id client
+# you can type command like as:
+[root@client ~]# ssh server hostname
+server.example.com
+
+# 5 SERVICE 
+## systemd ## 
+# show all service active and inactive 
+# systemctl list-units
+# systemctl list-unit-files
+# systemctl list-units --all
+# systemctl list-units --type service --all
+
+# systemctl start <NAME SERVICE>
+# systemctl enable <NAME SERVICE>
+# systemctl status <NAME SERVICE>
+# systemctl cat openstack-nova-api
+
+# 6 LOG
+## Journalclt ##
+## GREP show error log
+# grep -r ERROR /var/log/nova
+
+###########################
+###      OPENSTACK      ###
+###########################
+# openstack project show NAME -c id
+# openstack project show services -c id
++-------+----------------------------------+
+| Field | Value                            |
++-------+----------------------------------+
+| id    | 74b4dd190ee0470081e41303aff59594 |
++-------+----------------------------------+
+
+# Cinder volume
+[root@controller ~]# vgs
+  VG             #PV #LV #SN Attr   VSize  VFree  
+  VolGroup00       1   2   0 wz--n- 39.50g 320.00m
+  cinder-volumes   1   0   0 wz--n- 20.60g  20.60g
+
+[root@controller ~]# lvs
+  LV       VG         Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  LogVol00 VolGroup00 -wi-ao---- 37.69g                                                    
+  LogVol01 VolGroup00 -wi-ao----  1.50g                                                    
+
+# extend disk cinder-volumes 20GB --> 40GB
+[root@controller ~]# pvcreate /dev/vdb
+  Physical volume "/dev/vdb" successfully created.
+[root@controller ~]# vgextend cinder-volumes /dev/vdb
+  Volume group "cinder-volumes" successfully extended
+[root@controller ~]# vgs
+  VG             #PV #LV #SN Attr   VSize  VFree  
+  VolGroup00       1   2   0 wz--n- 39.50g 320.00m
+  cinder-volumes   2   0   0 wz--n- 40.59g  40.59g
+
+# user create volume @volume group
+[root@controller ~]# lvs
+  LV                                          VG             Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  LogVol00                                    VolGroup00     -wi-ao---- 37.69g                                                    
+  LogVol01                                    VolGroup00     -wi-ao----  1.50g                                                    
+  volume-f65919c1-940b-4b2a-bb4a-0767811eb7e0 cinder-volumes -wi-a-----  2.00g            
+
+# create snapshot
+[root@controller ~]# lvs
+  LV                                             VG             Attr       LSize  Pool Origin                                      Data%  Meta%  Move Log Cpy%Sync Convert
+  LogVol00                                       VolGroup00     -wi-ao---- 37.69g                                                                                         
+  LogVol01                                       VolGroup00     -wi-ao----  1.50g                                                                                         
+  _snapshot-55405a41-579b-4471-bcd4-009cf846d141 cinder-volumes swi-a-s---  2.00g      volume-f65919c1-940b-4b2a-bb4a-0767811eb7e0 0.00                                   
+  volume-f65919c1-940b-4b2a-bb4a-0767811eb7e0    cinder-volumes owi-aos---  2.00g     
+
+# ip netns
+#qrouter-xxxx
+#qdhcp-xxxx 
+
+# into router
+[root@controller ~]# ip netns
+qrouter-d56baa4c-84a2-46da-8f22-16456f5c7e0e
+qdhcp-73034140-b7a7-4f2b-829c-bac16c747431
+qrouter-b71a3018-c4ea-4f52-9467-864b5e1f2b09
+qdhcp-b811d348-e05c-400c-96d8-60a654bf5c77
+qrouter-5be735cf-8ddb-466b-a729-7d7a32da672e
+qdhcp-f51a70bd-7152-4220-92b5-64ffc85b634d
+
+# ip netns exec <NAMESPACE>   <COMMAND>
+# ip netns exec qrouter-xxxx  ip a
+# ip netns exec qrouter-xxxx  iptables-save
+# ip netns exec qrouter-xxxx  bash
+# ip netns exec qdhcp-xxxx    ps -ef | egrep dhcp
+ 
+# ip netns exec <ROUTER NAMESPACE> bash
+[root@controller ~]# ip netns exec qrouter-d56baa4c-84a2-46da-8f22-16456f5c7e0e bash
+[root@controller ~]# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+31: qr-025cd6c5-1d: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN qlen 1000
+    link/ether fa:16:3e:62:5e:36 brd ff:ff:ff:ff:ff:ff
+    inet 10.10.10.1/24 brd 10.10.10.255 scope global qr-025cd6c5-1d
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f816:3eff:fe62:5e36/64 scope link 
+       valid_lft forever preferred_lft forever
+32: qg-56234756-df: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN qlen 1000
+    link/ether fa:16:3e:fd:d1:88 brd ff:ff:ff:ff:ff:ff
+    inet 172.24.4.3/24 brd 172.24.4.255 scope global qg-56234756-df
+       valid_lft forever preferred_lft forever
+    inet6 fe80::f816:3eff:fefd:d188/64 scope link 
+       valid_lft forever preferred_lft foreve
+
+# ip netns exec <DHCP NAMESPACE> ps -ef | grep dhcp
+[root@controller ~]# ip netns exec qdhcp-73034140-b7a7-4f2b-829c-bac16c747431 ps -ef | grep dhcp
+
+
+### Openvswitch ###
+
+# list bridge
+# ovs-vsctl list-br
+[root@localhost ~]# ovs-vsctl list-br
+br-ex
+br-int
+br-tun
+
+[root@localhost ~]# ovs-vsctl list-ports br-int
+
+[root@localhost ~]# ip netns exec <DHCP NAMESPACE> ip l | <TAP NAMESPACE>
+
+10 tap = 10 networks
+
+qr - interface router
+qg - set gateway router
+
+# security group run in linuxbridge
+[root@localhost ~]# brctl show
+
+# SECURITY GROUP
+qbr = security group
+qvo = security on br-int
+qvb = port
+tap = vm insert
+
+totals of qbr = totals of vm (1:1)
+
+# tunnel is vxlan
+# Data send throght vxlan.
+# Switch L2 must support Vxlan.
+
+# dump network tunnel
+[root@localhost ~]# ovs-ofctl dump-flows br-tun
+
+#####################################################################
+######################### Special Knowledge #########################
+#####################################################################
+
+           ***************
+userspace  * Systemctl   *
+           *             *
+           ***************
+           *             *
+Kernel     * Systemd     *
+           *             *
+           *             *
+           * Kernel      *
+           *             *
+           ***************
+           *    *   *net *
+           * os *   *work*
+           *    *   *    *
+           ***************
+            boot process  
+
+# systemctl list-units --type service 
+# systemctl --help        
+
+# process ID : PID
+[admin@localhost heat]$ systemctl status atd.service
+● atd.service - Job spooling tools
+   Loaded: loaded (/usr/lib/systemd/system/atd.service; enabled; vendor preset: enable
+   Active: active (running) since Mon 2017-06-26 07:30:19 +07; 1 weeks 1 days ago
+ Main PID: 2103 (atd)
+    Tasks: 1 (limit: 512)
+   Memory: 380.0K
+      CPU: 66ms
+   CGroup: /system.slice/atd.service
+           └─2103 /usr/sbin/atd -f
+
+command 
+# ip route
+#
+
+System
+ - systemV --> config reload
+ - systemd --> process, No config
+
+network service
+1. network.service --> /etc/sysconfig/network-script
+2. (default) networkmanager * Openstack don't use it.
+
+security
+1. iptables
+2. firewalld 
+
+## Config IP address          
+# solution 1 : edit file /etc/sysconfig/network-scripts/
+# command after you edit file 
+[root@server ~]# nmcli connection reload 
+               or
+[root@server ~]# nmcli c r
+
+[root@server ~]# nmcli connection show 
+NAME         UUID                                  TYPE            DEVICE 
+System eth0  5fb06bd0-0bb0-7ffb-45f1-d6edd65f3e03  802-3-ethernet  eth0   
+System eth1  9c92fad9-6ecb-3e6c-eb4d-8a47c6f50c04  802-3-ethernet  eth1   
+
+[root@server ~]# nmcli device show 
+GENERAL.DEVICE:                         eth0
+GENERAL.TYPE:                           ethernet
+GENERAL.HWADDR:                         52:54:00:5B:3B:63
+GENERAL.MTU:                            1500
+GENERAL.STATE:                          100 (connected)
+GENERAL.CONNECTION:                     System eth0
+GENERAL.CON-PATH:                       /org/freedesktop/NetworkManager/ActiveConnection/0
+WIRED-PROPERTIES.CARRIER:               on
+IP4.ADDRESS[1]:                         192.168.121.224/24
+IP4.GATEWAY:                            192.168.121.1
+IP4.DNS[1]:                             192.168.121.1
+IP6.ADDRESS[1]:                         fe80::5054:ff:fe5b:3b63/64
+IP6.GATEWAY:                            
+
+GENERAL.DEVICE:                         eth1
+GENERAL.TYPE:                           ethernet
+GENERAL.HWADDR:     vim /etc/sysctl.conf                    52:54:00:F5:A2:65
+GENERAL.MTU:                            1500
+GENERAL.STATE:                          100 (connected)
+GENERAL.CONNECTION:                     System eth1
+GENERAL.CON-PATH:                       /org/freedesktop/NetworkManager/ActiveConnection/1
+WIRED-PROPERTIES.CARRIER:               on
+IP4.ADDRESS[1]:                         10.20.30.41/24
+IP4.GATEWAY:                            
+IP6.ADDRESS[1]:                         fe80::5054:ff:fef5:a265/64
+IP6.GATEWAY:                            
+
+GENERAL.DEVICE:                         lo
+GENERAL.TYPE:                           loopback
+GENERAL.HWADDR:                         00:00:00:00:00:00
+GENERAL.MTU:                            65536
+GENERAL.STATE:                          10 (unmanaged)
+GENERAL.CONNECTION:                     --
+GENERAL.CON-PATH:                       --
+IP4.ADDRESS[1]:                         127.0.0.1/8
+IP4.GATEWAY:                            
+IP6.ADDRESS[1]:                         ::1/128
+IP6.GATEWAY:                            
+
+# IP Network device
+[root@server ~]# ip l
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+
+# IP address on device
+[root@server ~]# ip a
+
+# IP routing table entry
+[root@server ~]# ip r
+default via 192.168.121.1 dev eth0  proto static  metric 100 
+10.20.30.0/24 dev eth1  proto kernel  scope link  src 10.20.30.41  metric 100 
+192.168.121.0/24 dev eth0  proto kernel  scope link  src 192.168.121.224  metric 100 
+
+* Specail install packages
+[root@server ~]# yum provides */<PACKAGE NAME>
+
+#view all repo
+[root@server ~]# yum repolist
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirror.adminbannok.com
+ * extras: mirror.adminbannok.com
+ * updates: mirror.adminbannok.com
+repo id                                repo name                                status
+base/7/x86_64                          CentOS-7 - Base                          9,363
+extras/7/x86_64                        CentOS-7 - Extras                          429
+updates/7/x86_64                       CentOS-7 - Updates                       2,053
+repolist: 11,845
+
+#####################################
+##         Linux Firewall          ##
+#####################################
+
+# IP forward : if you have interface card more than 1 card, you must setting ip forwarding
+# vim /etc/sysctl.conf
+-- Add --
+net.ipv4.ip_forward=1
+
+# sysctl -p
